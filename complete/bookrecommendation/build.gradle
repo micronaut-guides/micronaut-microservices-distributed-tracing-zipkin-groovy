@@ -1,0 +1,65 @@
+buildscript {
+    repositories {
+        mavenCentral()
+        maven { url "https://plugins.gradle.org/m2/" }
+    }
+    dependencies {
+        classpath "com.github.jengelman.gradle.plugins:shadow:2.0.4"
+        classpath "io.spring.gradle:dependency-management-plugin:1.0.5.RELEASE"
+    }
+}
+
+version "0.1"
+group "example.micronaut"
+
+apply plugin:"io.spring.dependency-management"
+apply plugin:"com.github.johnrengelman.shadow"
+apply plugin:"application"
+apply plugin:"groovy"
+
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+    maven { url "https://jcenter.bintray.com" }
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "io.micronaut:bom:$micronautVersion"
+    }
+}
+
+dependencies {
+    compile "io.micronaut:runtime-groovy"
+    compile "io.micronaut:http-client"
+    compile "io.micronaut:http-server-netty"
+    compileOnly "io.micronaut:inject-groovy"
+    runtime "ch.qos.logback:logback-classic:1.2.3"
+    testCompile "io.micronaut:inject-groovy"
+    testCompile("org.spockframework:spock-core:1.1-groovy-2.4") {
+        exclude group: "org.codehaus.groovy", module: "groovy-all"
+    }
+
+    //tag::tracing[]
+    compile "io.micronaut:tracing"
+    //end::tracing[]
+
+    //tag::zipkin[]
+    runtime 'io.zipkin.brave:brave-instrumentation-http:4.19.0'
+    runtime 'io.zipkin.reporter2:zipkin-reporter:2.5.0'
+    compile 'io.opentracing.brave:brave-opentracing:0.30.0'
+    //end::zipkin[]
+
+    compile "io.micronaut:management"
+}
+
+shadowJar {
+    mergeServiceFiles()
+}
+
+run.jvmArgs('-noverify', '-XX:TieredStopAtLevel=1')
+
+mainClassName = "example.micronaut.bookrecommendation.Application"
+
+apply from: "${rootProject.projectDir}/gradle/testVerbose.gradle"
